@@ -44,6 +44,7 @@ namespace LoginSignupApi.Controllers
 
                 peopleArray.Add(p);
             }
+            
             return peopleArray;
         }
 
@@ -77,13 +78,38 @@ namespace LoginSignupApi.Controllers
         
         // POST: api/Person
         [HttpPost]
-        public void Post([FromBody]Person person)
+        public string Post([FromBody]Person person)
         {
+            string postReult;
+            ArrayList unameList = new ArrayList();
             ConnectMysql();
+            string checkString = "SELECT uname FROM users";
 
-            string queryString = "INSERT INTO `users` (`uname`, `pword`, `email`) VALUES ('" + person.name + "', '" + person.password + "', '" + person.email + "');";
-            MySqlCommand cmd = new MySqlCommand(queryString, conn);
-            cmd.ExecuteNonQuery();
+            MySqlCommand checkCmd = new MySqlCommand(checkString, conn);
+
+            MySqlDataReader myReader = checkCmd.ExecuteReader();
+
+            while (myReader.Read())
+            {
+               
+                string pname = myReader["uname"].ToString();
+
+                unameList.Add(pname);
+            }
+            myReader.Close();
+
+            if (!unameList.Contains(person.name))
+            {
+                string queryString = "INSERT INTO `users` (`uname`, `pword`, `email`) VALUES ('" + person.name + "', '" + person.password + "', '" + person.email + "');";
+                MySqlCommand cmd = new MySqlCommand(queryString, conn);
+                cmd.ExecuteNonQuery();
+                postReult = "Added!";
+            }
+            else
+            {
+                postReult = "The user is already exsit!";
+            }
+            return postReult;
         }
         
         // PUT: api/Person/5
@@ -127,8 +153,8 @@ namespace LoginSignupApi.Controllers
 
             MySqlDataReader myReader = cmd.ExecuteReader();
             myReader.Read();
-            //if (myReader.Read())
-            //{
+            if (myReader.Read())
+            {
                 myReader.Close();
                 queryString = "DELETE FROM users WHERE id = " + id;
 
@@ -136,11 +162,11 @@ namespace LoginSignupApi.Controllers
 
                 cmd.ExecuteNonQuery();
                 return "Deleted";
-            //}
-            //else
-            //{
-                //return "Not found";
-            //}
+            }
+            else
+            {
+                return "Not found";
+            }
         }
 
         public void ConnectMysql()
