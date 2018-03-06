@@ -49,13 +49,13 @@ namespace LoginSignupApi.Controllers
         }
 
         // GET: api/Person/5
-        [HttpGet("{id}", Name = "Get")]
-        public Person Get(int id)
+        [HttpGet("{uname}", Name = "Get")]
+        public Person Get(string uname)
         {
             ConnectMysql();
 
             Person p = new Person();
-            string queryString = "SELECT * FROM users WHERE id = " + id;
+            string queryString = "SELECT * FROM users WHERE uname = '" + uname + "'";
 
             MySqlCommand cmd = new MySqlCommand(queryString, conn);
 
@@ -78,36 +78,51 @@ namespace LoginSignupApi.Controllers
         
         // POST: api/Person
         [HttpPost]
-        public string Post([FromBody]Person person)
+        public int Post([FromBody]Person person)
         {
-            string postReult;
+            int postReult;
             ArrayList unameList = new ArrayList();
+            ArrayList emailList = new ArrayList();
             ConnectMysql();
+
             string checkString = "SELECT uname FROM users";
-
             MySqlCommand checkCmd = new MySqlCommand(checkString, conn);
-
             MySqlDataReader myReader = checkCmd.ExecuteReader();
-
             while (myReader.Read())
             {
-               
                 string pname = myReader["uname"].ToString();
-
                 unameList.Add(pname);
+            }
+            myReader.Close();
+
+            checkString = "SELECT email FROM users";
+            checkCmd = new MySqlCommand(checkString, conn);
+            myReader = checkCmd.ExecuteReader();
+            while (myReader.Read())
+            {
+                string pname = myReader["email"].ToString();
+                emailList.Add(pname);
             }
             myReader.Close();
 
             if (!unameList.Contains(person.name))
             {
-                string queryString = "INSERT INTO `users` (`uname`, `pword`, `email`) VALUES ('" + person.name + "', '" + person.password + "', '" + person.email + "');";
-                MySqlCommand cmd = new MySqlCommand(queryString, conn);
-                cmd.ExecuteNonQuery();
-                postReult = "Added!";
+                if (!emailList.Contains(person.email))
+                {
+                    string queryString = "INSERT INTO `users` (`uname`, `pword`, `email`) VALUES ('" + person.name + "', '" + person.password + "', '" + person.email + "');";
+                    MySqlCommand cmd = new MySqlCommand(queryString, conn);
+                    cmd.ExecuteNonQuery();
+                    postReult = 1;
+                }
+                else
+                {
+                    postReult = 2;
+                }
+                
             }
             else
             {
-                postReult = "The user is already exsit!";
+                postReult = 0;
             }
             return postReult;
         }
