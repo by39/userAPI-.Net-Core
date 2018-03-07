@@ -128,12 +128,12 @@ namespace LoginSignupApi.Controllers
         }
         
         // PUT: api/Person/5
-        [HttpPut("{id}")]
-        public string Put(long id, [FromBody]Person p)
+        [HttpPut("{uname}")]
+        public int Put(string uname, [FromBody]Person p)
         {
             ConnectMysql();
 
-            string queryString = "SELECT * FROM users WHERE id = " + id;
+            string queryString = "SELECT * FROM users WHERE uname = '" + uname + "'";
 
             MySqlCommand cmd = new MySqlCommand(queryString, conn);
 
@@ -142,17 +142,17 @@ namespace LoginSignupApi.Controllers
             if (myReader.Read())
             {
                 myReader.Close();
-                queryString = "UPDATE `users` SET  `uname` = '" + p.name + "', `pword` = '" + p.password + "', `email` = '" + p.email + "' WHERE `users`.`id` = " + id;
+                queryString = "UPDATE `users` SET `pword` = '"+ p.password + "' WHERE `users`.`uname` = '" + uname + "'";
 
                 cmd = new MySqlCommand(queryString, conn);
 
                 cmd.ExecuteNonQuery();
 
-                return "Changed!";
+                return 1;
             }
             else
             {
-                return "Not found";
+                return 0;
             }
         }
         
