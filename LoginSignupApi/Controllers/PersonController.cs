@@ -10,6 +10,9 @@ using System.Net;
 using System.Net.Http;
 using System.Collections;
 using LoginSignupApi.Models;
+using System.Security.Cryptography;
+using MimeKit;
+using MailKit.Net.Smtp;
 
 namespace LoginSignupApi.Controllers
 {
@@ -126,6 +129,36 @@ namespace LoginSignupApi.Controllers
             }
             return postReult;
         }
+
+        //POST send code for resetting password
+        [HttpPost("{email}")]
+        public string POST(string email)
+        {
+            string password = CreateCode();
+            //////////////////////////////////////////////////////////////
+            //////////////////////////////////////////////////////////////
+            var message = new MimeMessage();
+
+            message.From.Add(new MailboxAddress("Test mail from", "boming.yu.nyriad@gmail.com"));
+            message.To.Add(new MailboxAddress("Test mail to", email));
+
+            message.Subject = "Test email asp.net";
+            message.Body = new TextPart("plain")
+            {
+                Text = "The code is " + password
+            };
+
+            using (var client = new SmtpClient())
+            {
+                client.Connect("smtp.gmail.com", 587, false);
+                client.Authenticate("boming.yu.nyriad@gmail.com", "yubo1234");
+                client.Send(message);
+                client.Disconnect(true);
+            }
+            //////////////////////////////////////////////////////////////
+            //////////////////////////////////////////////////////////////
+            return password;
+        }
         
         // PUT: api/Person/5
         [HttpPut("{uname}")]
@@ -182,6 +215,26 @@ namespace LoginSignupApi.Controllers
             {
                 return "Not found";
             }
+        }
+
+        public string CreateCode()
+        {
+            const string consonnants = "bcdfghjklmnpqrstvwxz";
+            const string vowels = "aeiouy";
+
+            string password = "";
+            byte[] bytes = new byte[4];
+            var rnd = new RNGCryptoServiceProvider();
+            for (int i = 0; i < 3; i++)
+            {
+                rnd.GetNonZeroBytes(bytes);
+                password += consonnants[bytes[0] * bytes[1] % consonnants.Length];
+                password += vowels[bytes[2] * bytes[3] % vowels.Length];
+            }
+
+            rnd.GetBytes(bytes);
+            password += (bytes[0] % 10).ToString() + (bytes[1] % 10).ToString();
+            return password;
         }
 
         public void ConnectMysql()
