@@ -132,7 +132,7 @@ namespace LoginSignupApi.Controllers
 
         //POST send code for resetting password
         [HttpPost("{email}")]
-        public string POST(string email)
+        public string Post(string email)
         {
             string password = CreateCode();
             //////////////////////////////////////////////////////////////
